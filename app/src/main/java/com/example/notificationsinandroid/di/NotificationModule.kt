@@ -20,6 +20,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @Module
@@ -29,23 +30,18 @@ object NotificationModule {
     //to define how our notification actually looks like
     @Provides
     @Singleton
+    @MainNotificationCompatBuilder
     fun provideNotificationBuilder(
         @ApplicationContext context: Context
     ): NotificationCompat.Builder {
 
-        val intent = Intent(context, MyReceiver::class.java).apply {
-            putExtra("message", "Clicked")
-        }
+        val intent =
+            Intent(context, MyReceiver::class.java).apply { putExtra("message", "Clicked") }
 
         val flag =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
 
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            intent,
-            flag
-        )
+        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, flag)
 //        val clickIntent = Intent(context, MainActivity::class.java)
 //        val clickPendingIntent = PendingIntent.getActivity(
 //            context,
@@ -53,17 +49,14 @@ object NotificationModule {
 //            clickIntent,
 //            flag
 //        )
-
         val clickIntent = Intent(
             Intent.ACTION_VIEW,
             "$MY_URI/$MY_ARG=Coming from Notification".toUri(),
             context,
             MainActivity::class.java
         )
-        val clickPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-            addNextIntentWithParentStack(clickIntent)
-            getPendingIntent(1, flag)
-        }
+        val clickPendingIntent: PendingIntent = TaskStackBuilder.create(context)
+            .run { addNextIntentWithParentStack(clickIntent).getPendingIntent(1, flag) }
 
         return NotificationCompat.Builder(
             context,
@@ -83,6 +76,19 @@ object NotificationModule {
             )
             .addAction(0, "ACTION", pendingIntent)
             .setContentIntent(clickPendingIntent)
+    }
+
+    @Provides
+    @Singleton
+    @SecondNotificationCompatBuilder
+    fun provideSecondNotificationBuilder(
+        @ApplicationContext context: Context
+
+    ): NotificationCompat.Builder {
+        return NotificationCompat.Builder(context, "Second Channel Id")
+            .setSmallIcon(R.drawable.ic_notification)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
 
     }
 
@@ -99,8 +105,22 @@ object NotificationModule {
                 "Main Channel",//visible within user settings
                 NotificationManager.IMPORTANCE_DEFAULT
             )
+            val channel2 = NotificationChannel(
+                "Second Channel Id",//should be same as one provided in the notification builder.
+                "Second Channel",//visible within user settings
+                NotificationManager.IMPORTANCE_LOW
+            )
             notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(channel2)
         }
         return notificationManager
     }
 }
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MainNotificationCompatBuilder
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SecondNotificationCompatBuilder
