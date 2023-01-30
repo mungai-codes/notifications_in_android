@@ -1,15 +1,19 @@
 package com.example.notificationsinandroid.di
 
-import android.app.Notification.VISIBILITY_PUBLIC
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
+import com.example.notificationsinandroid.MainActivity
 import com.example.notificationsinandroid.R
+import com.example.notificationsinandroid.navigation.MY_ARG
+import com.example.notificationsinandroid.navigation.MY_URI
 import com.example.notificationsinandroid.receiver.MyReceiver
 import dagger.Module
 import dagger.Provides
@@ -42,6 +46,24 @@ object NotificationModule {
             intent,
             flag
         )
+//        val clickIntent = Intent(context, MainActivity::class.java)
+//        val clickPendingIntent = PendingIntent.getActivity(
+//            context,
+//            1,
+//            clickIntent,
+//            flag
+//        )
+
+        val clickIntent = Intent(
+            Intent.ACTION_VIEW,
+            "$MY_URI/$MY_ARG=Coming from Notification".toUri(),
+            context,
+            MainActivity::class.java
+        )
+        val clickPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(clickIntent)
+            getPendingIntent(1, flag)
+        }
 
         return NotificationCompat.Builder(
             context,
@@ -60,6 +82,7 @@ object NotificationModule {
                     .build()
             )
             .addAction(0, "ACTION", pendingIntent)
+            .setContentIntent(clickPendingIntent)
 
     }
 

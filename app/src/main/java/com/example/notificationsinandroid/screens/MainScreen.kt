@@ -1,4 +1,4 @@
-package com.example.notificationsinandroid
+package com.example.notificationsinandroid.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -8,9 +8,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import com.example.notificationsinandroid.MainViewModel
+import com.example.notificationsinandroid.navigation.Screen.Details
 
 @Composable
-fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
+fun MainScreen(navController: NavHostController, mainViewModel: MainViewModel = hiltViewModel()) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -26,6 +29,16 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
         Spacer(modifier = Modifier.height(12.dp))
         Button(onClick = mainViewModel::cancelNotification) {
             Text(text = "Cancel Notification")
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = {
+            navController.navigate(
+                Details.passArgument(
+                    message = "Coming from Main Screen."
+                )
+            )
+        }) {
+            Text(text = "DETAILS SCREEN")
         }
     }
 }
